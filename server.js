@@ -103,9 +103,11 @@ app.patch('/api/feedback/:id/hidden', async (req, res) => {
 });
 
 // Insert test data if needed
+// Replace your seed endpoint with this:
 app.post('/api/seed', async (req, res) => {
+    console.log('Seed route hit');
     try {
-        // Example seed data (adapted from your mockData)
+        // Example seed data
         const seedData = [
             {
                 schema: 'mesai',
@@ -118,20 +120,39 @@ app.post('/api/seed', async (req, res) => {
                     { role: 'assistant', message: 'isteğinizi işleme alıyorum. ' },
                     { role: 'assistant', message: 'Bu hafta toplamda 35.3 saat çalıştınız.' }
                 ]
-            },
-            // Add more seed data as needed
+            }
         ];
 
-        await Feedback.insertMany(seedData);
-        res.json({ message: 'Seed data inserted successfully' });
+        console.log('About to insert seed data');
+        const result = await Feedback.insertMany(seedData);
+        console.log('Seed result:', result);
+        res.json({ message: 'Seed data inserted successfully', count: result.length });
     } catch (err) {
-        console.error('Error seeding data:', err);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Error details:', err);
+        res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
-app.post('/api/seed', async (req, res) => {
-    console.log('Seed route hit');
-    // rest of code...
+// Add this after other middleware
+app.use((err, req, res, next) => {
+    console.error('Express error:', err);
+    res.status(500).json({ error: err.message });
+});
+// Add this route
+app.get('/api/seed-get', async (req, res) => {
+    try {
+        await Feedback.insertMany([{
+            schema: 'test',
+            question: 'test',
+            query: 'test',
+            feedback: null,
+            hidden: false,
+            conversation: [{ role: 'user', message: 'test' }]
+        }]);
+        res.json({success: true});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({error: err.message});
+    }
 });
 // Add this before the app.listen line
 app.get('/'
